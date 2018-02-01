@@ -1,0 +1,46 @@
+searchguard:
+  # dynamic:
+  #   http:
+  #     xff:
+  #       enabled: true
+  #       remoteIpHeader: 'x-forwarded-for'
+  #       trustedProxies: '.*'
+  #       internalProxies: '.*'
+  #   authc:
+  #     authentication_domain_basic_internal:
+  #       enabled: true
+  #       order: 1
+  #       http_authenticator:
+  #         type: clientcert
+  #         challenge: false
+  #       authentication_backend:
+  #         type: noop
+  #     basic_internal_auth_domain:
+  #       http_enabled: true
+  #       transport_enabled: true
+  #       order: 2
+  #       http_authenticator:
+  #         type: basic
+  #         challenge: true
+  #       authentication_backend:
+  #         type: internal
+  dynamic:
+    http:
+      xff:
+        enabled: false
+    authc:
+      basic_internal_auth_domain:
+        http_authenticator:
+          type: basic
+        authentication_backend:
+          type: intern
+      clientcert_auth_domain:
+        enabled: false
+        order: 1
+        http_authenticator:
+          type: clientcert
+          config:
+            username_attribute: cn
+          challenge: false
+        authentication_backend:
+          type: noop

@@ -1,0 +1,56 @@
+extends layout
+
+block content
+  h4= title
+  table
+    thead
+      tr
+        th Title
+        th Author
+        th Year
+        th Language
+        th Pages
+        th Country
+    tbody
+      each book in books
+        tr
+          td
+            a(href=book.link, target='_blank') #{book.title}
+          td= book.author
+          td= book.year
+          td= book.language
+          td= book.pages
+          td= book.country
+  ul.pagination
+    - var page = 0;
+    while page < pagination.pages
+      if page == pagination.page
+        li.active
+          a(href='/books?page=' + page++) #{page}
+      else
+        li.waves-effect
+          a(href='/books?page=' + page++) #{page}
+
+
+//-
+  h4= 'Add a new book'
+  div.row
+    form(method='POST', action='').col.s6
+      div.row
+        div.input-field.col.s12
+          label(for='title') Title:
+          input#title.form-control(type='text', name='title')
+        div.input-field.col.s12
+          label(for='author') Author:
+          input#author.form-control(type='text', name='author')
+        div.input-field.col.s12
+          label(for='year') Year:
+          input#year.form-control(type='text', name='year')
+        button.btn.btn-primary(type='submit') Create
+        if errors
+          ul
+            for error in errors
+              li!= error.msg
+
+block footer
+  a(href='/') Index

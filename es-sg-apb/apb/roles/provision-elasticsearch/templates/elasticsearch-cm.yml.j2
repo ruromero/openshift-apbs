@@ -1,0 +1,61 @@
+
+cluster:
+  name: ${CLUSTER_NAME}
+
+node:
+  name: ${DC_NAME}
+  master: true
+  data: true
+
+path:
+  data: /elasticsearch/persistent/${CLUSTER_NAME}/data
+  logs: /elasticsearch/${CLUSTER_NAME}/logs
+
+network:
+  host: 0.0.0.0
+
+cloud:
+ kubernetes:
+   service: elasticsearch
+   namespace: ${NAMESPACE}
+
+discovery.zen.hosts_provider: kubernetes
+# discovery.type: single-node
+# discovery.zen.minimum_master_nodes: 1
+
+## Disable X-Pack
+## see https://www.elastic.co/guide/en/x-pack/current/xpack-settings.html
+##     https://www.elastic.co/guide/en/x-pack/current/installing-xpack.html#xpack-enabling
+#
+xpack:
+  security.enabled: false
+  monitoring.enabled: false
+  ml.enabled: false
+  graph.enabled: false
+  watcher.enabled: false
+
+searchguard:
+  # enterprise_modules_enabled: false
+  authcz.admin_dn:
+    - 'CN=system.admin,OU=OpenShift,O=RedHat'
+  nodes_dn:
+    - 'CN=elasticsearch,OU=OpenShift,O=RedHat'
+  ssl:
+    transport:
+      enabled: true
+      enforce_hostname_verification: false
+      keystore_type: JKS
+      keystore_filepath: /usr/share/elasticsearch/config/secret/searchguard.key
+      keystore_password: kspass
+      truststore_type: JKS
+      truststore_filepath: /usr/share/elasticsearch/config/secret/truststore
+      truststore_password: tspass
+    http:
+      enabled: true
+      keystore_type: JKS
+      keystore_filepath: /usr/share/elasticsearch/config/secret/key
+      keystore_password: kspass
+      clientauth_mode: OPTIONAL
+      truststore_type: JKS
+      truststore_filepath: /usr/share/elasticsearch/config/secret/truststore
+      truststore_password: tspass

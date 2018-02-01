@@ -1,0 +1,119 @@
+---
+- name: Copy Elasticsearch config
+  copy:
+    src: config
+    dest: "{{ tempdir }}/"
+
+- name: Create Elasticsearch config from Template
+  template:
+    src: elasticsearch-cm.yml.j2
+    dest: "{{ tempdir }}/config/elasticsearch.yml"
+
+- name: Check Elasticsearch ConfigMap existence
+  shell: oc get cm/{{ CLUSTER_NAME }}-es --no-headers | wc -l
+  register: result
+
+- name: Create Elasticsearch ConfigMap
+  shell: oc create configmap {{ CLUSTER_NAME }}-es --from-file={{ tempdir }}/config -n {{ namespace }}
+  when: result.stdout | int == 0
+
+- name: Create SearchGuard configuration
+  copy:
+    src: "sgconfig"
+    dest: "{{ tempdir }}/"
+
+- name: Generate user credentials
+  template:
+    src: sg_internal_users.yml.j2
+    dest: "{{ tempdir }}/sgconfig/sg_internal_users.yml"
+
+- name: Create SeachGuard internal users ConfigMap
+  shell: oc create configmap {{ CLUSTER_NAME }}-sg --from-file={{ tempdir }}/sgconfig -n '{{ namespace }}'
+
+- name: Create Elasticsearch DeploymentConfig
+  openshift_v1_deployment_config:
+    name: "{{ CLUSTER_NAME }}"
+    namespace: '{{ namespace }}'
+    labels:
+      component: "es"
+      deployment: "{{ CLUSTER_NAME }}"
+    replicas: 1
+    selector:
+      component: es
+      deployment: "{{ CLUSTER_NAME }}"
+    strategy_type: Recreate
+    spec_template_metadata_labels:
+      component: "es"
+      deployment: "{{ CLUSTER_NAME }}"
+    containers:
+      - name: elasticsearch
+        image: '{{ ES_IMAGE }}'
+        image_pull_policy: IfNotPresent
+        resources:
+          limits:
+            memory: 512Mi
+          requests:
+            memory: 512Mi
+        ports:
+          - name: restapi
+            container_port: 9200
+          - name: cluster
+            container_port: 9300
+        env:
+          - name: "DC_NAME"
+            value: "{{ CLUSTER_NAME }}"
+          - name: "NAMESPACE"
+            value_from:
+              field_ref:
+                field_path: metadata.namespace
+          - name: "KUBERNETES_TRUST_CERT"
+            value: "true"
+          - name: "CLUSTER_NAME"
+            value: "{{ CLUSTER_NAME }}"
+          - name: "INSTANCE_RAM"
+            value: 512Mi
+        volume_mounts:
+          - name: elasticsearch
+            mount_path: /etc/elasticsearch/secret
+            read_only: true
+          - name: elasticsearch-config
+            mount_path: /etc/elasticsearch/config
+          - name: searchguard-config
+            mount_path: /opt/app-root/src/sgconfig
+            read_only: true
+          - name: elasticsearch-storage
+            mount_path: /elasticsearch/persistent
+    volumes:
+      - name: elasticsearch
+        secret:
+          secret_name: "{{ CLUSTER_NAME }}"
+      - name: elasticsearch-config
+        config_map:
+          name: "{{ CLUSTER_NAME }}-es"
+      - name: searchguard-config
+        config_map:
+          name: "{{ CLUSTER_NAME }}-sg"
+      - name: elasticsearch-storage
+        emptydir: {}
+    state: present
+
+- name: Create elasticsearch-cluster service
+  k8s_v1_service:
+    name: "{{ CLUSTER_NAME }}-cluster"
+    namespace: "{{ namespace }}"
+    state: present
+    selector:
+      component: es
+    ports:
+      - port: 9300
+
+- name: Create elasticsearch service
+  k8s_v1_service:
+    name: "{{ CLUSTER_NAME }}"
+    namespace: "{{ namespace }}"
+    state: present
+    selector:
+      component: es
+    ports:
+      - port: 9200
+        target_port: "restapi"

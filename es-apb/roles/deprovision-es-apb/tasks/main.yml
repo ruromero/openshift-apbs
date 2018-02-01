@@ -1,0 +1,42 @@
+---
+- name: Create ServiceAccount
+  k8s_v1_service_account:
+    name: "{{ APPLICATION_NAME }}"
+    namespace: "{{ namespace }}"
+    state: absent
+
+# - name: Create RoleBinding
+#   k8s_v1beta1_role_binding:
+#     name: "{{ APPLICATION_NAME }}-view"
+#     namespace: "{{ namespace }}"
+#     state: absent
+
+- name: Create API service
+  k8s_v1_service:
+    name: "{{ APPLICATION_NAME }}"
+    namespace: "{{ namespace }}"
+    state: absent
+
+- name: Create Cluster service
+  k8s_v1_service:
+    name: "{{ APPLICATION_NAME }}-cluster"
+    namespace: "{{ namespace }}"
+    state: absent
+
+# - name: Create Route
+#   openshift_v1_route:
+#     name: "{{ APPLICATION_NAME }}"
+#     namespace: "{{ namespace }}"
+#     state: absent
+
+- name: Create ConfigMap
+  k8s_v1_config_map:
+    name: "{{ APPLICATION_NAME }}"
+    namespace: "{{ namespace}}"
+    state: absent
+
+- name: Create StatefulSet
+  k8s_v1beta1_stateful_set:
+    name: "{{ APPLICATION_NAME }}"
+    namespace: "{{ namespace}}"
+    state: absent

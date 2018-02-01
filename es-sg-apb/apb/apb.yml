@@ -1,0 +1,38 @@
+version: 1.0
+name: elasticsearch-apb
+description: This is an APB to deploy a secured Elasticsearch instance
+bindable: True
+async: optional
+metadata:
+  imageUrl: https://www.elastic.co/assets/blt9a26f88bfbd20eb5/icon-elasticsearch-bb.svg
+  documentationUrl: https://www.elastic.co/guide/en/elasticsearch/reference/5.5/index.html
+  displayName: Elasticsearch (APB)
+plans:
+  - name: default
+    description: Deploys an Elasticsearch instance secured by SearchGuard
+    free: True
+    metadata: {}
+    parameters:
+    - name: ES_IMAGE
+      type: string
+      default: ruromero/es-apb-demo:latest
+      description: Docker image with Elasticsearch with Searchguard
+      title: Elasticsearch image
+      required: true
+    - name: CLUSTER_NAME
+      type: string
+      default: elasticsearch
+      description: Name of the Elasticsearch cluster
+      title: Elasticsearch cluster name
+      required: true
+    - name: elasticsearch_client_username
+      type: string
+      default: esclient
+      title: Elasticsearch client user
+      required: true
+    - name: elasticsearch_client_password
+      type: string
+      title: Elasticsearch client password
+      description: A random alphanumeric string if left blank
+      display_type: password
+      required: false

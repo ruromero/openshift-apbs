@@ -1,0 +1,52 @@
+---
+- template: src=signing.conf.j2 dest={{ generated_certs_dir }}/signing.conf
+  vars:
+    - top_dir: '{{ generated_certs_dir }}'
+
+- copy: content="" dest={{ generated_certs_dir }}/ca.db
+  check_mode: no
+- copy: content="" dest={{ generated_certs_dir }}/ca.crt.srl
+  check_mode: no
+
+- name: Create Root Certificate
+  shell: >
+    oc adm ca create-signer-cert --key {{ generated_certs_dir }}/ca.key --cert {{ generated_certs_dir }}/ca.crt --serial {{ generated_certs_dir }}/ca.serial.txt --name=elasticsearch-signer-'{{ namespace }}'
+
+- name: Generate client certs
+  include_tasks: generate_pems.yml
+  vars:
+    component: system.admin
+
+- name: Creating necessary JKS
+  include_tasks: generate_jks.yml
+
+# FIXME: Binary keystores are not imported properly
+# - name: Create elasticsearch secret
+#   k8s_v1_secret:
+#     state: present
+#     resource_definition:
+#       metadata:
+#         name: logging-elasticsearch
+#         namespace: '{{ namespace }}'
+#       data:
+#         key: "{{ lookup('fileglob','{{ generated_certs_dir }}/logging-es.jks') | b64encode }}"
+#         truststore: "{{ lookup('fileglob','{{ generated_certs_dir }}/truststore.jks') | b64encode }}"
+#         searchguard.key: "{{ lookup('fileglob','{{ generated_certs_dir }}/elasticsearch.jks') | b64encode }}"
+#         searchguard.truststore: "{{ lookup('fileglob','{{ generated_certs_dir }}/truststore.jks') | b64encode }}"
+#         admin.jks: "{{ lookup('fileglob','{{ generated_certs_dir }}/system.admin.jks') | b64encode }}"
+#         admin-key: "{{ lookup('file', '{{ generated_certs_dir }}/system.admin.key') | b64encode }}"
+#         admin-cert: "{{ lookup('file', '{{ generated_certs_dir }}/system.admin.crt') | b64encode }}"
+#         admin-ca: "{{ lookup('file', '{{ generated_certs_dir }}/ca.crt') | b64encode }}"
+
+
+
+- name: Create elasticsearch secret (hard-way)
+  command: >
+    oc secrets new {{ CLUSTER_NAME }} -n {{ namespace }}
+      key={{ generated_certs_dir }}/elasticsearch.jks
+      truststore={{ generated_certs_dir }}/truststore.jks
+      searchguard.key={{ generated_certs_dir }}/elasticsearch-cluster.jks
+      admin.jks={{ generated_certs_dir }}/system.admin.jks
+      admin-key={{ generated_certs_dir }}/system.admin.key
+      admin-cert={{ generated_certs_dir }}/system.admin.crt
+      admin-ca={{ generated_certs_dir }}/ca.crt

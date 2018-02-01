@@ -1,0 +1,33 @@
+sg_all_access:
+  cluster:
+    - '*'
+  indices:
+    '*':
+      '*':
+        - '*'
+
+sg_kibana:
+  cluster:
+    - CLUSTER_COMPOSITE_OPS_RO
+    - CLUSTER_MONITOR
+  indices:
+    '*':
+      '*':
+        - READ
+        - indices:admin/mappings/fields/get*
+    '?kibana':
+      '*':
+        - READ
+        - WRITE
+        - 'indices:admin/mappings/fields/get*'
+        - 'indices:admin/refresh*'
+
+# Allows each user to access own named index
+sg_own_index:
+  cluster:
+    - CLUSTER_COMPOSITE_OPS
+    - CLUSTER_STATUS
+  indices:
+    'project?${user_name}':
+      '*':
+        - ALL

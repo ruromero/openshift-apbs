@@ -1,0 +1,41 @@
+---
+- name: Generate and import keys into keystores
+  local_action: script generate-jks.sh {{ generated_certs_dir }} {{ namespace }} {{ CLUSTER_NAME }}
+
+# - name: Import CA certificate and create keystore
+#   java_cert:
+#     cert_alias: sig-ca
+#     cert_path: {{ generated_certs_dir }}/ca.crt
+#     keystore_path: {{ generated_certs_dir }}/{{ node_name }}.jks
+#     keystore_pass: kspass
+#     keystore_create: yes
+#     state: present
+#   with_items:
+#     - system.admin
+#     - logging-es
+#     - elasticsearch
+#   loop_control:
+#     loop_var: node_name
+#
+# - name: Import certificates
+#   java_cert:
+#     cert_alias: "{{ node_name }}"
+#     cert_path: {{ generated_certs_dir }}/{{ node_name }}.crt
+#     keystore_path: {{ generated_certs_dir }}/{{ node_name }}.jks
+#     keystore_pass: kspass
+#     state: present
+#   with_items:
+#     - system.admin
+#     - logging-es
+#     - elasticsearch
+#   loop_control:
+#     loop_var: node_name
+#
+# - name: Create truststore
+#   java_cert:
+#     cert_alias: sig-ca
+#     cert_path: {{ generated_certs_dir }}/ca.crt
+#     keystore_path: {{ generated_certs_dir }}/truststore.jks
+#     keystore_pass: tspass
+#     keystore_create: yes
+#     state: present

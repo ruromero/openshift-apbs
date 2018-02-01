@@ -1,0 +1,35 @@
+---
+- name: Create temp directory for doing work in
+  command: mktemp -d /tmp/es-apb-XXXXXX
+  register: mktemp
+  changed_when: False
+
+- set_fact:
+    tempdir: "{{ mktemp.stdout }}"
+- set_fact:
+    generated_certs_dir: "{{ tempdir }}"
+- set_fact:
+    CLUSTER_NAME: "{{ lookup('env','CLUSTER_NAME') }}"
+- set_fact:
+    ES_PASS: "{{ elasticsearch_client_password | default(lookup('password', '/tmp/pass chars=ascii_letters,digits')) }}"
+
+- name: Generate Certificates
+  include_tasks: generate_certs.yml
+
+- name: Deploy Elasticsearch
+  include_tasks: deploy_elasticsearch.yml
+
+
+##############################################################################
+## Bindable services must make credentials available to the Ansible Service
+## Broker during the provision stage.  They will later be made available to
+## applications after a binding is created.
+## https://github.com/kubernetes-incubator/service-catalog/blob/master/docs/design.md#using-a-service-instance
+##############################################################################
+- name: encode bind credentials
+  asb_encode_binding:
+    fields:
+      ES_SVC: "{{ CLUSTER_NAME }}"
+      ES_PORT: 9200
+      ES_USER: "{{ elasticsearch_client_username }}"
+      ES_PASS: "{{ ES_PASS }}"

@@ -1,0 +1,12 @@
+---
+- name: Creating cert req for {{component}}
+  command: >
+    openssl req -out {{ generated_certs_dir }}/{{component}}.csr -new -newkey rsa:2048 -keyout {{ generated_certs_dir }}/{{component}}.key
+    -subj "/CN={{component}}/OU=OpenShift/O=RedHat" -days 712 -nodes
+  check_mode: no
+
+- name: Sign cert request with CA for {{component}}
+  command: >
+    openssl ca -in {{ generated_certs_dir }}/{{component}}.csr -notext -out {{ generated_certs_dir }}/{{component}}.crt
+    -config {{ generated_certs_dir }}/signing.conf -extensions v3_req -batch -extensions server_ext
+  check_mode: no

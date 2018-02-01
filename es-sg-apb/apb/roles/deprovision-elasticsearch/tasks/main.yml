@@ -1,0 +1,30 @@
+---
+- name: Delete Services
+  k8s_v1_service:
+    name: '{{ item }}'
+    namespace: '{{ namespace }}'
+    state: absent
+  with_items:
+    - "{{ CLUSTER_NAME }}"
+    - "{{ CLUSTER_NAME }}-cluster"
+
+- name: Delete DeploymentConfig
+  openshift_v1_deployment_config:
+   name: "{{ CLUSTER_NAME }}"
+   namespace: '{{ namespace }}'
+   state: absent
+
+- name: Delete ConfigMaps
+  k8s_v1_config_map:
+    name: "{{ item }}"
+    namespace: "{{ namespace }}"
+    state: absent
+  with_items:
+    - "{{ CLUSTER_NAME }}-es"
+    - "{{ CLUSTER_NAME }}-sg"
+
+- name: Delete Secret
+  k8s_v1_secret:
+    name: "{{ CLUSTER_NAME }}"
+    namespace: "{{ namespace }}"
+    state: absent
