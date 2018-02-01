@@ -13,15 +13,17 @@ Two plans have been defined:
 * **ES_MEMORY_LIMIT**: Memory limits to be set to the `elasticsearch` container. The half will be assigned to the Elasticsearch heap. Default `512Mi`
 * **ES_PVC_SIZE**: Size of each Persistent Volume Claim that will be defined. Default `1Gi` (Only for the persistent plan)
 
-## Known issues
+## Ansible Service Broker - Requirements
 
-The elasticsearch-cloud-kubernetes plugin requires access to the project's endpoints. A RoleBinding should do that during provisioning.
-Currently the RoleBinding for the `elasticsearch` ServiceAccount is not working and has to be done manually after deployment.
+The elasticsearch-cloud-kubernetes plugin requires permissions to `view` the project's `endpoints`. A `ServiceAccount` with a `RoleBinding` are created for that during provisioning.
+In order for the `ServiceAccount` used by the APB during provisioning to be able to `create` `RoleBinding`s, the Ansible Service Broker needs to be configured with the `sandbox_role: "admin"` as showned below:
 
 ```
-$ oc adm policy add-role-to-user view -z elasticsearch
-```
-After that pods need to be deleted so that changes take effect.
-```
-$ oc delete pods -l app=elasticsearch
+    openshift:
+      host: ""
+      ca_file: ""
+      bearer_token_file: ""
+      image_pull_policy: "IfNotPresent"
+      sandbox_role: "admin"
+      namespace: ansible-service-broker
 ```

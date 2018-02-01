@@ -5,25 +5,17 @@
     namespace: "{{ namespace }}"
     state: present
 
-# TODO: NOT Allowed
-# fatal: [localhost]: FAILED! => {"changed": false, "error": 403, "msg": "Failed to retrieve requested object: rolebindings.rbac.authorization.k8s.io \"elasticsearch-view\" is forbidden: User \"system:serviceaccount:localregistry-es-apb-prov-gz4nr:apb-212696fc-664f-44b6-b0b1-db04966e2be8\" cannot get rolebindings.rbac.authorization.k8s.io in the namespace \"ek-apb\": User \"system:serviceaccount:localregistry-es-apb-prov-gz4nr:apb-212696fc-664f-44b6-b0b1-db04966e2be8\" cannot get rolebindings.rbac.authorization.k8s.io in project \"ek-apb\""}
-#
-# After setting in broker-config sandbox_role: "admin"
-#
-#TASK [provision-es-apb : Create RoleBinding] ***********************************
-# fatal: [localhost]: FAILED! => {"changed": false, "error": 500, "msg": "Failed to create object: unsupported role reference kind: {\"rbac.authorization.k8s.io\" \"\"}"}
-# 	to retry, use: --limit @/opt/apb/actions/provision.retry
-#
-# - name: Create RoleBinding
-#   k8s_v1beta1_role_binding:
-#     name: "{{ APPLICATION_NAME }}-view"
-#     namespace: "{{ namespace }}"
-#     state: present
-#     role_ref_name: view
-#     subjects:
-#     - kind: ServiceAccount
-#       name: "{{ APPLICATION_NAME }}"
-#       namespace: "{{ namespace }}"
+- name: Create RoleBinding
+  k8s_v1beta1_role_binding:
+    name: "{{ APPLICATION_NAME }}-view"
+    namespace: "{{ namespace }}"
+    state: present
+    role_ref_name: view
+    role_ref_kind: ClusterRole
+    subjects:
+    - kind: ServiceAccount
+      name: "{{ APPLICATION_NAME }}"
+      namespace: "{{ namespace }}"
 
 - name: Create API service
   k8s_v1_service:
