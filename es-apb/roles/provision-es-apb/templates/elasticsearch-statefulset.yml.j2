@@ -2,6 +2,15 @@ apiVersion: apps/v1beta1
 kind: StatefulSet
 metadata:
   name: {{ APPLICATION_NAME }}
+  annotations:
+    image.openshift.io/triggers: |
+      [{
+      "from": {
+        "kind": "ImageStreamTag",
+        "name": "{{ APPLICATION_NAME }}:{{ elasticsearch_version }}"
+        },
+        "fieldPath": "spec.template.spec.containers[?(@.name==\"elasticsearch\")].image"
+      }]
 spec:
   serviceName: {{ APPLICATION_NAME }}
   replicas: {{ CLUSTER_SIZE }}
@@ -23,7 +32,7 @@ spec:
           value: info
         - name: INSTANCE_RAM
           value: {{ ES_MEMORY_LIMIT }}
-        image: ruromero/openshift-elasticsearch:latest
+        image: ' '
         imagePullPolicy: IfNotPresent
         resources:
           limits:

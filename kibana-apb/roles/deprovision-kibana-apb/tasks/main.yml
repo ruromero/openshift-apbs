@@ -17,7 +17,7 @@
     namespace: "{{ namespace}}"
     state: absent
 
-- name: Create PersistentVolumeClaim
+- name: Delete PersistentVolumeClaim
   k8s_v1_persistent_volume_claim:
     name: "{{ APPLICATION_NAME }}-claim"
     namespace: "{{ namespace}}"

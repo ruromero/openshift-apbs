@@ -1,4 +1,20 @@
 ---
+- name: Process ImageStream from template
+  template:
+    src: elasticsearch-is.yml.j2
+    dest: "/tmp/elasticsearch-is.yml"
+  register: is
+
+- debug:
+    var: is
+
+- name: Create ImageStream
+  openshift_v1_image_stream:
+    name: "{{ APPLICATION_NAME }}"
+    namespace: "{{ namespace }}"
+    state: present
+    src: "{{ is.dest | default(is.path) }}"
+
 - name: Create ServiceAccount
   k8s_v1_service_account:
     name: "{{ APPLICATION_NAME }}"
@@ -40,15 +56,6 @@
       - name: cluster
         port: 9300
         target_port: 9300
-
-# - name: Create Route
-#   openshift_v1_route:
-#     name: "{{ APPLICATION_NAME }}"
-#     namespace: "{{ namespace }}"
-#     state: present
-#     spec_to_kind: Service
-#     spec_to_name: "{{ APPLICATION_NAME }}"
-#     port_target_port: restapi
 
 - name: Process ConfigMap from template
   template:
